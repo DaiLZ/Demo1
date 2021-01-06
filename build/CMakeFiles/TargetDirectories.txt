@@ -1,0 +1,3 @@
+/home/solong/workspace/Demo1/build/CMakeFiles/edit_cache.dir
+/home/solong/workspace/Demo1/build/CMakeFiles/rebuild_cache.dir
+/home/solong/workspace/Demo1/build/CMakeFiles/dbtest.dir

@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.5.1)
+project(Demo1)
+aux_source_directory(./src DIR_SRCS)
+add_executable(dbtest ${DIR_SRCS})
+target_link_libraries(dbtest libpthread.so) 
