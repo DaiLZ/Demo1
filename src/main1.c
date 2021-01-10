@@ -42,7 +42,6 @@ int x1 = 431424, yy1 = 598356, r1 = 427089, px1 = 247872, py1 = 799248, pr1,
     c1 = 348480, p1 = 615696, tick1, board1[20][10],
     score1 = -1;
   pthread_t id;
-  pthread_t id_key;
   pthread_mutex_t mutex;
 // extract a 2-bit number from a block entry
 int NUM(int x, int y) { return 3 & block[p][x] >> y; }
@@ -208,8 +207,9 @@ int do_tick1() {
 }
 // main game loop with wasd input checking
 void runloop() {
-  while (do_tick1()&&do_tick()) {
+  while (do_tick()) {
     usleep(20000);
+ c=c1=getch();
     if (c == 'a' && x > 0 && !check_hit(x - 1, y, r)) {
       x--;
     }
@@ -244,8 +244,9 @@ void runloop() {
 }
 
 void runloop1() {
-  while (do_tick1()&&do_tick()) {
+  while (do_tick1()) {
     usleep(20000);
+ c=c1=getch();
     if (c1 == 'j' && x1 > 0 && !check_hit1(x1 - 1, yy1, r1)) {
       x1--;
     }
@@ -283,19 +284,10 @@ void *run(void *ptr)
   new_piece1();
   runloop1();
 }
-void *run_key(void *ptr){
-  while (do_tick1()&&do_tick()) {
- usleep(20000);
-  c=c1=getch();
-  if(c=='q')
-   break;
- }
-}
 // init curses and start runloop
 int main() {
   WINDOW *user1;
   WINDOW *user2;
- // WINDOW *result;
   srand(time(0));
   initscr();
   start_color();
@@ -312,29 +304,10 @@ int main() {
   user2= subwin(stdscr,22,22,0,38);
   box(user1,0 , 0);
   box(user2,0 , 0);
+  //runloop();
   pthread_create(&id,NULL,run,NULL);
-  pthread_create(&id_key,NULL,run_key,NULL);
   runloop();
   pthread_join(id,NULL);
-  pthread_join(id_key,NULL);
- // result= subwin(stdscr,8,30,7,15);
- // box(result,0,0);
-    move(8, 22); // otherwise the box won't draw
-    printw("----------------");
-    move(15, 22); // otherwise the box won't draw
-    printw("----------------");
-  move(11,25);
-  if(score>score1){
-    printw("the left win");
-  }else if(score1>score){
-    printw("the right win");
-  }
-  else
-   printw("tie");
-  refresh();
-  while(getch()!='q')
-  {};
   endwin();
-
 }
 
