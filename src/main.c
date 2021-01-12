@@ -1,26 +1,3 @@
-/*#include<stdio.h>
-#include<pthread.h>
-#include<unistd.h>
-void *run(void *ptr){
-	int i;
-	for( i=0;i<3;i++)
-	{
-		sleep(1);	
-		printf("hello %d\n",i);
-	}
-	return 0;
-}
-int main()
-{
-	pthread_t id;
-	int ret=0;
-	ret=pthread_create(&id,NULL,run,NULL);
-	if(ret){
-		printf("create thread failed\n");
-	}
-	pthread_join(id,NULL);
-	return 0;
-}*/
 #include <time.h>
 #include <curses.h>
 #include <unistd.h>
@@ -319,19 +296,29 @@ int main() {
   pthread_join(id_key,NULL);
  // result= subwin(stdscr,8,30,7,15);
  // box(result,0,0);
-    move(8, 22); // otherwise the box won't draw
-    printw("----------------");
-    move(15, 22); // otherwise the box won't draw
-    printw("----------------");
-  move(11,25);
-  if(score>score1){
-    printw("the left win");
-  }else if(score1>score){
-    printw("the right win");
-  }
-  else
-   printw("tie");
-  refresh();
+//   if(score>score1){
+//     result.addstr(11,25,"the left win");
+//   }else if(score1>score){
+//     result.addstr(11,25,"the right win");
+//   }
+//   else
+//    result.addstr(11,25,"tie");
+//   result.box();
+//   result.refresh();
+	
+//     move(8, 22); // otherwise the box won't draw
+//     printw("----------------");
+//     move(15, 22); // otherwise the box won't draw
+//     printw("----------------");
+//   move(11,25);
+//   if(score>score1){
+//     printw("the left win");
+//   }else if(score1>score){
+//     printw("the right win");
+//   }
+//   else
+//    printw("tie");
+//   refresh();
   while(getch()!='q')
   {};
   endwin();
