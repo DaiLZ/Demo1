@@ -7,12 +7,12 @@
 // block layout is: {w-1,h-1}{x0,y0}{x1,y1}{x2,y2}{x3,y3} (two bits each)
 int x = 431424, y = 598356, r = 427089, px = 247872, py = 799248, pr,
     c = 348480, p = 615696, tick, board[20][10],
-    block[7][4] = {{431424, 598356, 431424, 598356},
-                   {427089, 615696, 427089, 615696},
-                   {348480, 348480, 348480, 348480},
-                   {599636, 431376, 598336, 432192},
+    block[7][4] = {{431424, 598356, 431424, 598356},//Z1   2  1
+                   {427089, 615696, 427089, 615696},//Z2   2  1
+                   {348480, 348480, 348480, 348480},//fang   1
+                   {599636, 431376, 598336, 432192},    // 1 2
                    {411985, 610832, 415808, 595540},
-                   {247872, 799248, 247872, 799248},
+                   {247872, 799248, 247872, 799248},//|
                    {614928, 399424, 615744, 428369}},
     score = -1;
 int x1 = 431424, yy1 = 598356, r1 = 427089, px1 = 247872, py1 = 799248, pr1,
@@ -28,8 +28,8 @@ int NUM1(int x, int y) { return 3 & block[p1][x] >> y; }
 // create a new piece, don't remove old one (it has landed and should stick)
 void new_piece() {
   y = py = 0;
-  p = rand() % 7;
-  r = pr = rand() % 4;
+  p = rand() % 7; // 7 shape
+  r = pr = rand() % 4;  // 4 change
   x = px = rand() % (10 - NUM(r, 16));
   score++;
 }
@@ -85,8 +85,17 @@ void set_piece1(int x, int y, int r, int v) {
 }
 // move a piece from old (p*) coords to new
 int update_piece() {
+  int tipy=y;
+  int tipypy=py;
   set_piece(px, py, pr, 0);
+	
+  while (!check_hit(x, tipypy + 1, r)) tipypy++;
+  set_piece(x,tipypy,r,0);	
+	
   set_piece(px = x, py = y, pr = r, p + 1);
+  //tip
+  while (!check_hit(x, tipy + 1, r)) tipy++;
+  set_piece(x,tipy,r,8);
 }
 int update_piece1() {
   set_piece1(px1, py1, pr1, 0);
@@ -114,6 +123,7 @@ void remove_line1() {
     c1 = 1;
     for (int i = 0; i < 10; i++) {
       c1 *= board1[row][i];
+      if(board1[row][i]==8) c1=0;
     }
     if (!c1) {
       continue;
@@ -277,9 +287,12 @@ int main() {
   initscr();
   start_color();
   // colours indexed by their position in the block
-  for (int i = 1; i < 8; i++) {
+  // add 1 lighter colors for tips
+  init_color(8, 200, 200, 200);
+  for (int i = 1; i < 9; i++) {
     init_pair(i, i, 0);
   }
+  
   new_piece();
   resizeterm(23,60);
   noecho();
