@@ -6,15 +6,16 @@
 #include <pthread.h>
 typedef struct {
 	int id;//start from 0
-	int x; int y;
+	int x,y;
 	int shape;//r
-	int px; int py;
+	int px,py;
 	int pshape;//pr
 	int c;
 	int kind;//p
 	int tick;
 	int score;
 	int board[20][10];
+	int tipy;
 }GameUser;
 int block[7][4] = { {431424, 598356, 431424, 598356},//Z1
 				   {427089, 615696, 427089, 615696},//Z2 
@@ -30,7 +31,7 @@ GameUser user1, user2;
 int NUM(int x, int y, int p) { return 3 & block[p][x] >> y; }
 // create a new piece, don't remove old one (it has landed and should stick)
 void new_piece(GameUser *user) {
-	(*user).y = (*user).py = 0;
+	(*user).tipy=(*user).y = (*user).py = 0;
 	(*user).kind = rand() % 7; // 7 kinds
 	(*user).shape = (*user).pshape = rand() % 4;  // 4 shapes
 	(*user).x = (*user).px = rand() % (10 - NUM((*user).shape, 16, (*user).kind));
@@ -54,37 +55,32 @@ void frame(GameUser *user) {
 }
 
 // set the value fo the board for a particular (x,y,r) piece
-void set_piece(int x, int y, GameUser *user, int v) {
+void set_piece(int x, int y, int shape,GameUser *user, int v) {
 	for (int i = 0; i < 8; i += 2) {
-		(*user).board[NUM((*user).shape, i * 2, (*user).kind) + y][NUM((*user).shape, (i * 2) + 2, (*user).kind) + x] = v;
+		(*user).board[NUM(shape, i * 2, (*user).kind) + y][NUM(shape, (i * 2) + 2, (*user).kind) + x] = v;
 	}
 }
-int check_hit1(int x, int y, GameUser *user) {
+int check_hit1(int x, int y, int shape,GameUser *user) {
 	int c = 0;
-	if (y + NUM((*user).shape, 18, (*user).kind) > 19) {
+	if (y + NUM(shape, 18, (*user).kind) > 19) {
 		return 1;
 	}
 	for (int i = 0; i < 8; i += 2) {
-		if ((*user).board[y + NUM((*user).shape, i * 2, (*user).kind)][x + NUM((*user).shape, (i * 2) + 2, (*user).kind)] == 8) continue;
-		(*user).board[y + NUM((*user).shape, i * 2, (*user).kind)][x + NUM((*user).shape, (i * 2) + 2, (*user).kind)] && c++;
+		if ((*user).board[y + NUM(shape, i * 2, (*user).kind)][x + NUM(shape, (i * 2) + 2, (*user).kind)] == 8) continue;
+		(*user).board[y + NUM(shape, i * 2, (*user).kind)][x + NUM(shape, (i * 2) + 2, (*user).kind)] && c++;
 	}
 	return c;
 }
 // move a piece from old (p*) coords to new
 void update_piece(GameUser *user) {
-	int tipy = (*user).y;
-	int tipypy = (*user).py;
-	set_piece((*user).px, (*user).py, user, 0);
-	//tip
-	if ((*user).x != (*user).px || (*user).y == 0)
+	set_piece((*user).px, (*user).py,(*user).pshape,user, 0);
 	{
-		while (!check_hit1((*user).px, tipypy + 1, user)) tipypy++;
-		set_piece((*user).px, tipypy, user, 0);
-		while (!check_hit1((*user).x, tipy + 1, user)) tipy++;
-		set_piece((*user).x, tipy, user, 8);
+		set_piece((*user).px,(*user).tipy,(*user).pshape, user, 0);
+		(*user).tipy=(*user).y;
+		while (!check_hit1((*user).x,(*user).tipy + 1,(*user).shape, user)) (*user).tipy++;
+		set_piece((*user).x, (*user).tipy,(*user).shape, user, 8);
 	}
-	(*user).pshape = (*user).shape;
-	set_piece((*user).px = (*user).x, (*user).py = (*user).y, user, (*user).kind + 1);
+	set_piece((*user).px = (*user).x, (*user).py = (*user).y,(*user).pshape=(*user).shape, user, (*user).kind + 1);
 }
 // remove line(s) from the board if they're full
 void remove_line(GameUser *user) {
@@ -110,12 +106,12 @@ int check_hit(int x, int y, GameUser *user) {
 	if (y + NUM((*user).shape, 18, (*user).kind) > 19) {
 		return 1;
 	}
-	set_piece((*user).px, (*user).py, user, 0);
+	set_piece((*user).px, (*user).py,(*user).pshape, user, 0);
 	for (int i = 0; i < 8; i += 2) {
 		if ((*user).board[y + NUM((*user).shape, i * 2, (*user).kind)][x + NUM((*user).shape, (i * 2) + 2, (*user).kind)] == 8) continue;
 		(*user).board[y + NUM((*user).shape, i * 2, (*user).kind)][x + NUM((*user).shape, (i * 2) + 2, (*user).kind)] && c++;
 	}
-	set_piece((*user).px, (*user).py, user, (*user).kind + 1);
+	set_piece((*user).px, (*user).py,(*user).pshape, user, (*user).kind + 1);
 	return c;
 }
 // slowly tick the piece y position down so the piece falls
@@ -148,7 +144,7 @@ void runloop(GameUser *user) {
 		left = 'j'; right = 'l'; down = 'k'; swap = 'i';
 	}
 	while (do_tick(&user1) && do_tick(&user2)) {
-		usleep(20000);
+		usleep(50000);
 		if ((*user).c == left && (*user).x > 0 && !check_hit((*user).x - 1, (*user).y, user)) {
 			(*user).x--;
 		}
@@ -185,8 +181,8 @@ void *run(void *ptr)
 	return 0;
 }
 void *run_key(void *ptr) {
-	while (do_tick(&user1) && do_tick(&user2)) {
-		usleep(20000);
+	while (do_tick(&user1)&& do_tick(&user2)) {
+		usleep(50000);
 		user1.c = user2.c = getch();
 		if (user1.c == 'q')break;
 	}
